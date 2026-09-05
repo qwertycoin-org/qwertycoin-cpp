@@ -69,6 +69,8 @@
 #include "serialization/binary_utils.h"
 #include "serialization/string.h"
 #include "common/threadpool.h"
+#include <type_traits>
+#include <utility>
 
 using namespace tools;
 
@@ -84,6 +86,24 @@ namespace monero {
   static const uint64_t SYNC_CHUNK_SIZE = 10000; // refresh far-behind wallets in bounded chunks so operations like save can interleave
 
   // ----------------------- INTERNAL PRIVATE HELPERS -----------------------
+
+  template<typename T>
+  class has_shutdown
+  {
+    template<typename U> static auto test(int) -> decltype(std::declval<U&>().shutdown(), std::true_type());
+    template<typename> static std::false_type test(...);
+
+  public:
+    static const bool value = decltype(test<T>(0))::value;
+  };
+
+  template<typename T>
+  typename std::enable_if<has_shutdown<T>::value>::type shutdown_wallet(T* wallet) {
+    wallet->shutdown();
+  }
+
+  template<typename T>
+  typename std::enable_if<!has_shutdown<T>::value>::type shutdown_wallet(T*) {}
 
   struct key_image_list
   {
@@ -3660,7 +3680,7 @@ namespace monero {
     MTRACE("close()");
     if (m_is_closed) return; // closing a closed wallet has no effect
     stop_syncing(); // prevent sync thread from starting again and interrupt refresh
-    m_w2->shutdown(); // teardown: refresh cannot re-arm, and an in-flight daemon request is aborted
+    shutdown_wallet(m_w2.get()); // available on newer upstream wallet2, absent in the current QWC core
     if (m_sync_loop_running) {
       m_sync_cv.notify_one();
       std::this_thread::sleep_for(std::chrono::milliseconds(1));  // TODO: in emscripten, m_sync_cv.notify_one() returns without waiting, so sleep; bug in emscripten upstream llvm?
