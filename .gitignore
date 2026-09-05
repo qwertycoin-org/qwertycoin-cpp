@@ -1,0 +1,14 @@
+# macOS metadata
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+/build/
+
+/external/boost-sdk/
+/external/openssl-sdk/
+
+/external-libs/
+/log_cpp_scratchpad.txt
+/test_wallets/
