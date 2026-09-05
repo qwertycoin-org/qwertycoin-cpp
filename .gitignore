@@ -1,3 +1,9 @@
+# macOS metadata
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
 /build/
 
 /external/boost-sdk/
