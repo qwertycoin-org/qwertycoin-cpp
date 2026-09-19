@@ -2070,6 +2070,14 @@ namespace monero {
       }
       extra.assign(extra_blob.begin(), extra_blob.end());
       if (extra.size() > MAX_TX_EXTRA_SIZE) throw std::runtime_error("Custom tx extra exceeds the relay limit");
+      std::vector<cryptonote::tx_extra_field> extra_fields;
+      if (!cryptonote::parse_tx_extra(extra, extra_fields)) {
+        throw std::runtime_error("Custom tx extra is not structurally valid");
+      }
+      std::vector<uint8_t> canonical_extra;
+      if (!cryptonote::sort_tx_extra(extra, canonical_extra) || canonical_extra != extra) {
+        throw std::runtime_error("Custom tx extra is not canonically ordered");
+      }
     }
 
     // prepare parameters for wallet2's create_transactions_2()
