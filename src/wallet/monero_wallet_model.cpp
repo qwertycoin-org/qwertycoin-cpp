@@ -1479,6 +1479,7 @@ namespace monero {
     }
     m_subtract_fee_from = config.m_subtract_fee_from;
     m_payment_id = config.m_payment_id;
+    m_extra_hex = config.m_extra_hex;
     m_priority = config.m_priority;
     m_ring_size = config.m_ring_size;
     m_fee = config.m_fee;
@@ -1512,6 +1513,7 @@ namespace monero {
     // set string values
     rapidjson::Value value_str(rapidjson::kStringType);
     if (m_payment_id != boost::none) monero_utils::add_json_member("paymentId", m_payment_id.get(), allocator, root, value_str);
+    if (m_extra_hex != boost::none) monero_utils::add_json_member("extraHex", m_extra_hex.get(), allocator, root, value_str);
     if (m_note != boost::none) monero_utils::add_json_member("note", m_note.get(), allocator, root, value_str);
     if (m_recipient_name != boost::none) monero_utils::add_json_member("recipientName", m_recipient_name.get(), allocator, root, value_str);
     if (m_key_image != boost::none) monero_utils::add_json_member("keyImage", m_key_image.get(), allocator, root, value_str);
@@ -1543,6 +1545,7 @@ namespace monero {
       }
       else if (key == std::string("subtractFeeFrom")) for (boost::property_tree::ptree::const_iterator it2 = it->second.begin(); it2 != it->second.end(); ++it2) config->m_subtract_fee_from.push_back(it2->second.get_value<uint32_t>());
       else if (key == std::string("paymentId")) config->m_payment_id = it->second.data();
+      else if (key == std::string("extraHex")) config->m_extra_hex = it->second.data();
       else if (key == std::string("priority")) {
         uint32_t priority_num = it->second.get_value<uint32_t>();
         if (priority_num == 0) config->m_priority = monero_tx_priority::DEFAULT;
