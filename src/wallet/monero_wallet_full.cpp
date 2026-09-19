@@ -2064,9 +2064,11 @@ namespace monero {
     }
     if (config.m_extra_hex != boost::none) {
       if (!payment_id.empty()) throw std::runtime_error("Cannot combine custom tx extra with a payment ID");
-      if (!epee::string_tools::parse_hexstr_to_binbuff(config.m_extra_hex.get(), extra)) {
+      std::string extra_blob;
+      if (!epee::string_tools::parse_hexstr_to_binbuff(config.m_extra_hex.get(), extra_blob)) {
         throw std::runtime_error("Invalid custom tx extra hex");
       }
+      extra.assign(extra_blob.begin(), extra_blob.end());
       if (extra.size() > MAX_TX_EXTRA_SIZE) throw std::runtime_error("Custom tx extra exceeds the relay limit");
     }
 
@@ -2172,7 +2174,8 @@ namespace monero {
       tx->m_in_tx_pool = tx->m_relay.get();
       if (!tx->m_is_failed.get() && tx->m_is_relayed.get()) tx->m_is_double_spend_seen = false;  // TODO: test and handle if true
       tx->m_num_confirmations = 0;
-      tx->m_extra_hex = epee::string_tools::buff_to_hex_nodelimer(ptx_iter->tx.extra);
+      tx->m_extra_hex = epee::string_tools::buff_to_hex_nodelimer(
+          std::string(reinterpret_cast<const char*>(ptx_iter->tx.extra.data()), ptx_iter->tx.extra.size()));
       tx->m_ring_size = monero_utils::RING_SIZE;
       tx->m_unlock_time = 0;
       tx->m_is_locked = true;
