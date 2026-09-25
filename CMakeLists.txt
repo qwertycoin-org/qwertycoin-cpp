@@ -15,12 +15,12 @@ endif()
 #SET(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fsanitize=address")
 #SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -std=c++14 -F/Library/Frameworks -pthread -fsanitize=address")    # TODO: way to enable sanitize?  get runtime error with this on
 
-project(MoneroCppLibrary)
+project(QwertycoinCppLibrary)
 
 if (NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Release)
 endif()
-add_definitions(-DBOOST_UUID_DISABLE_ALIGNMENT) # match monero-project so shared struct layouts agree
+add_definitions(-DBOOST_UUID_DISABLE_ALIGNMENT) # match Qwertycoin Core so shared struct layouts agree
 
 option(ENABLE_COVERAGE "Enable coverage" OFF)
 
@@ -30,7 +30,7 @@ if(ENABLE_COVERAGE)
   add_link_options(--coverage)
 endif()
 
-option(BUILD_LIBRARY "Build monero-cpp library" ON)
+option(BUILD_LIBRARY "Build qwertycoin-cpp library" ON)
 option(BUILD_SAMPLE "Build c++ sample code" OFF)
 option(BUILD_SCRATCHPAD "Build c++ scratchpad" OFF)
 option(BUILD_TESTS "Builc c++ tests" OFF)
@@ -48,11 +48,11 @@ if (STATIC)
 endif()
 
 ###################
-# monero-project
+# Qwertycoin Core
 ###################
 
-set(MONERO_PROJECT "${CMAKE_SOURCE_DIR}/external/monero-project" CACHE STRING "Monero project source directory")
-set(MONERO_PROJECT_SRC "${MONERO_PROJECT}/src")
+set(QWERTYCOIN_CORE "${CMAKE_SOURCE_DIR}/external/qwertycoin-core" CACHE STRING "Qwertycoin Core source directory")
+set(QWERTYCOIN_CORE_SRC "${QWERTYCOIN_CORE}/src")
 
 set(EXTERNAL_LIBS_DIR ${CMAKE_SOURCE_DIR}/external-libs)
 message(STATUS EXTERNAL_LIBS_DIR : ${EXTERNAL_LIBS_DIR})
@@ -170,33 +170,33 @@ message(STATUS "Using HIDAPI include dir at ${HIDAPI_INCLUDE_DIR}")
 add_definitions(-DHAVE_HIDAPI)
 
 #############
-# Monero
+# Qwertycoin Core
 #############
 
-set(MONERO_PROJECT_BUILD "${MONERO_PROJECT}/build/release" CACHE STRING "Monero project build directory")
-message(STATUS "Using monero-project build: " ${MONERO_PROJECT_BUILD})
+set(QWERTYCOIN_CORE_BUILD "${QWERTYCOIN_CORE}/build/release" CACHE STRING "Qwertycoin Core build directory")
+message(STATUS "Using Qwertycoin Core build: " ${QWERTYCOIN_CORE_BUILD})
 
-list(APPEND CMAKE_MODULE_PATH "${MONERO_PROJECT}/cmake")
+list(APPEND CMAKE_MODULE_PATH "${QWERTYCOIN_CORE}/cmake")
 
 add_library(wallet STATIC IMPORTED)
 set_target_properties(wallet PROPERTIES IMPORTED_LOCATION
-    ${MONERO_PROJECT_BUILD}/lib/libwallet.a)
+    ${QWERTYCOIN_CORE_BUILD}/lib/libwallet.a)
 
 # libwallet-crypto.a provides x86_64 asm for some wallet functions
-if (EXISTS ${MONERO_PROJECT_BUILD}/src/crypto/wallet/libwallet-crypto.a)
+if (EXISTS ${QWERTYCOIN_CORE_BUILD}/src/crypto/wallet/libwallet-crypto.a)
   add_library(wallet_crypto_lib STATIC IMPORTED)
   set_target_properties(wallet_crypto_lib PROPERTIES IMPORTED_LOCATION
-      ${MONERO_PROJECT_BUILD}/src/crypto/wallet/libwallet-crypto.a)
+      ${QWERTYCOIN_CORE_BUILD}/src/crypto/wallet/libwallet-crypto.a)
   set(wallet_crypto wallet_crypto_lib)
 endif()
 
 add_library(lmdb STATIC IMPORTED)
 set_target_properties(lmdb PROPERTIES IMPORTED_LOCATION
-    ${MONERO_PROJECT_BUILD}/external/db_drivers/liblmdb/liblmdb.a)
+    ${QWERTYCOIN_CORE_BUILD}/external/db_drivers/liblmdb/liblmdb.a)
 
 add_library(epee STATIC IMPORTED)
 set_target_properties(epee PROPERTIES IMPORTED_LOCATION
-    ${MONERO_PROJECT_BUILD}/contrib/epee/src/libepee.a)
+    ${QWERTYCOIN_CORE_BUILD}/contrib/epee/src/libepee.a)
 
 ############
 # Unbound
@@ -209,7 +209,7 @@ else()
   message(STATUS "Found libunbound include (unbound.h) in ${UNBOUND_INCLUDE_DIR}")
   if(UNBOUND_LIBRARIES)
     message(STATUS "Found libunbound library")
-    if (NOT TARGET unbound) # newer monero-project FindUnbound defines the target itself
+    if (NOT TARGET unbound) # newer Qwertycoin Core FindUnbound defines the target itself
       if (WIN32 OR STATIC)
         add_library(unbound STATIC IMPORTED)
       else()
@@ -239,87 +239,87 @@ endif()
 
 add_library(rpc_base STATIC IMPORTED)
 set_target_properties(rpc_base PROPERTIES IMPORTED_LOCATION
-    ${MONERO_PROJECT_BUILD}/src/rpc/librpc_base.a)
+    ${QWERTYCOIN_CORE_BUILD}/src/rpc/librpc_base.a)
 
 add_library(net STATIC IMPORTED)
 set_target_properties(net PROPERTIES IMPORTED_LOCATION
-    ${MONERO_PROJECT_BUILD}/src/net/libnet.a)
+    ${QWERTYCOIN_CORE_BUILD}/src/net/libnet.a)
     
 add_library(hardforks STATIC IMPORTED)
 set_target_properties(hardforks PROPERTIES IMPORTED_LOCATION
-    ${MONERO_PROJECT_BUILD}/src/hardforks/libhardforks.a)
+    ${QWERTYCOIN_CORE_BUILD}/src/hardforks/libhardforks.a)
     
 add_library(easylogging STATIC IMPORTED)
 set_target_properties(easylogging PROPERTIES IMPORTED_LOCATION
-    ${MONERO_PROJECT_BUILD}/external/easylogging++/libeasylogging.a)
+    ${QWERTYCOIN_CORE_BUILD}/external/easylogging++/libeasylogging.a)
 
 add_library(cryptonote_core STATIC IMPORTED)
 set_target_properties(cryptonote_core PROPERTIES IMPORTED_LOCATION
-    ${MONERO_PROJECT_BUILD}/src/cryptonote_core/libcryptonote_core.a)
+    ${QWERTYCOIN_CORE_BUILD}/src/cryptonote_core/libcryptonote_core.a)
 
 add_library(cryptonote_protocol STATIC IMPORTED)
 set_target_properties(cryptonote_protocol PROPERTIES IMPORTED_LOCATION
-    ${MONERO_PROJECT_BUILD}/src/cryptonote_protocol/libcryptonote_protocol.a)
+    ${QWERTYCOIN_CORE_BUILD}/src/cryptonote_protocol/libcryptonote_protocol.a)
 
 add_library(cryptonote_basic STATIC IMPORTED)
 set_target_properties(cryptonote_basic PROPERTIES IMPORTED_LOCATION
-    ${MONERO_PROJECT_BUILD}/src/cryptonote_basic/libcryptonote_basic.a)
+    ${QWERTYCOIN_CORE_BUILD}/src/cryptonote_basic/libcryptonote_basic.a)
     
 add_library(cryptonote_format_utils_basic STATIC IMPORTED)
 set_target_properties(cryptonote_format_utils_basic PROPERTIES IMPORTED_LOCATION
-    ${MONERO_PROJECT_BUILD}/src/cryptonote_basic/libcryptonote_format_utils_basic.a)
+    ${QWERTYCOIN_CORE_BUILD}/src/cryptonote_basic/libcryptonote_format_utils_basic.a)
 
 add_library(mnemonics STATIC IMPORTED)
 set_target_properties(mnemonics PROPERTIES IMPORTED_LOCATION
-    ${MONERO_PROJECT_BUILD}/src/mnemonics/libmnemonics.a)
+    ${QWERTYCOIN_CORE_BUILD}/src/mnemonics/libmnemonics.a)
 
 add_library(common STATIC IMPORTED)
 set_target_properties(common PROPERTIES IMPORTED_LOCATION
-    ${MONERO_PROJECT_BUILD}/src/common/libcommon.a)
+    ${QWERTYCOIN_CORE_BUILD}/src/common/libcommon.a)
 
 add_library(cncrypto STATIC IMPORTED)
 set_target_properties(cncrypto PROPERTIES IMPORTED_LOCATION
-    ${MONERO_PROJECT_BUILD}/src/crypto/libcncrypto.a)
+    ${QWERTYCOIN_CORE_BUILD}/src/crypto/libcncrypto.a)
 
 add_library(ringct STATIC IMPORTED)
 set_target_properties(ringct PROPERTIES IMPORTED_LOCATION
-    ${MONERO_PROJECT_BUILD}/src/ringct/libringct.a)
+    ${QWERTYCOIN_CORE_BUILD}/src/ringct/libringct.a)
 
 add_library(ringct_basic STATIC IMPORTED)
 set_target_properties(ringct_basic PROPERTIES IMPORTED_LOCATION
-    ${MONERO_PROJECT_BUILD}/src/ringct/libringct_basic.a)
+    ${QWERTYCOIN_CORE_BUILD}/src/ringct/libringct_basic.a)
 
 add_library(blockchain_db STATIC IMPORTED)
 set_target_properties(blockchain_db PROPERTIES IMPORTED_LOCATION
-    ${MONERO_PROJECT_BUILD}/src/blockchain_db/libblockchain_db.a)
+    ${QWERTYCOIN_CORE_BUILD}/src/blockchain_db/libblockchain_db.a)
 
 add_library(blocks STATIC IMPORTED)
 set_target_properties(blocks PROPERTIES IMPORTED_LOCATION
-    ${MONERO_PROJECT_BUILD}/src/blocks/libblocks.a)
+    ${QWERTYCOIN_CORE_BUILD}/src/blocks/libblocks.a)
 
 add_library(checkpoints STATIC IMPORTED)
 set_target_properties(checkpoints PROPERTIES IMPORTED_LOCATION
-    ${MONERO_PROJECT_BUILD}/src/checkpoints/libcheckpoints.a)
+    ${QWERTYCOIN_CORE_BUILD}/src/checkpoints/libcheckpoints.a)
 
 add_library(device STATIC IMPORTED)
 set_target_properties(device PROPERTIES IMPORTED_LOCATION
-    ${MONERO_PROJECT_BUILD}/src/device/libdevice.a)
+    ${QWERTYCOIN_CORE_BUILD}/src/device/libdevice.a)
     
 add_library(device_trezor STATIC IMPORTED)
 set_target_properties(device_trezor PROPERTIES IMPORTED_LOCATION
-    ${MONERO_PROJECT_BUILD}/src/device_trezor/libdevice_trezor.a)
+    ${QWERTYCOIN_CORE_BUILD}/src/device_trezor/libdevice_trezor.a)
 
 add_library(multisig STATIC IMPORTED)
 set_target_properties(multisig PROPERTIES IMPORTED_LOCATION
-    ${MONERO_PROJECT_BUILD}/src/multisig/libmultisig.a)
+    ${QWERTYCOIN_CORE_BUILD}/src/multisig/libmultisig.a)
 
 add_library(version STATIC IMPORTED)
 set_target_properties(version PROPERTIES IMPORTED_LOCATION
-    ${MONERO_PROJECT_BUILD}/src/libversion.a)
+    ${QWERTYCOIN_CORE_BUILD}/src/libversion.a)
     
 add_library(randomx STATIC IMPORTED)
 set_target_properties(randomx PROPERTIES IMPORTED_LOCATION
-    ${MONERO_PROJECT_BUILD}/external/randomx/librandomx.a)
+    ${QWERTYCOIN_CORE_BUILD}/external/randomx/librandomx.a)
     
 ########################
 # Build c++ library
@@ -343,22 +343,22 @@ set(
 
 if (BUILD_LIBRARY)
   # compile sources once, then assemble both shared and static libraries from the objects
-  add_library(monero-cpp-obj OBJECT ${LIBRARY_SRC_FILES})
-  set_target_properties(monero-cpp-obj PROPERTIES POSITION_INDEPENDENT_CODE ON)
+  add_library(qwertycoin-cpp-obj OBJECT ${LIBRARY_SRC_FILES})
+  set_target_properties(qwertycoin-cpp-obj PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
-  target_include_directories(monero-cpp-obj PUBLIC
+  target_include_directories(qwertycoin-cpp-obj PUBLIC
       ${CMAKE_CURRENT_SOURCE_DIR}/include
       src
-      "${MONERO_PROJECT}/contrib/epee/include"
-      "${MONERO_PROJECT}/external/"
-      "${MONERO_PROJECT}/external/easylogging++"
-      "${MONERO_PROJECT}/external/rapidjson/include"
-      "${MONERO_PROJECT_SRC}/"
-      "${MONERO_PROJECT_SRC}/wallet"
-      "${MONERO_PROJECT_SRC}/wallet/api"
-      "${MONERO_PROJECT_SRC}/hardforks"
-      "${MONERO_PROJECT_SRC}/crypto"
-      "${MONERO_PROJECT_SRC}/crypto/crypto_ops_builder/include/"
+      "${QWERTYCOIN_CORE}/contrib/epee/include"
+      "${QWERTYCOIN_CORE}/external/"
+      "${QWERTYCOIN_CORE}/external/easylogging++"
+      "${QWERTYCOIN_CORE}/external/rapidjson/include"
+      "${QWERTYCOIN_CORE_SRC}/"
+      "${QWERTYCOIN_CORE_SRC}/wallet"
+      "${QWERTYCOIN_CORE_SRC}/wallet/api"
+      "${QWERTYCOIN_CORE_SRC}/hardforks"
+      "${QWERTYCOIN_CORE_SRC}/crypto"
+      "${QWERTYCOIN_CORE_SRC}/crypto/crypto_ops_builder/include/"
       ${Protobuf_INCLUDE_DIR}
       ${Boost_INCLUDE_DIR}
       ${OPENSSL_INCLUDE_DIR}
@@ -368,11 +368,11 @@ if (BUILD_LIBRARY)
       ${UNBOUND_INCLUDE_DIR}
   )
 
-  add_library(monero-cpp SHARED $<TARGET_OBJECTS:monero-cpp-obj>)
-  add_library(monero-cpp-static STATIC $<TARGET_OBJECTS:monero-cpp-obj>)
-  set_target_properties(monero-cpp-static PROPERTIES OUTPUT_NAME monero-cpp)
+  add_library(qwertycoin-cpp SHARED $<TARGET_OBJECTS:qwertycoin-cpp-obj>)
+  add_library(qwertycoin-cpp-static STATIC $<TARGET_OBJECTS:qwertycoin-cpp-obj>)
+  set_target_properties(qwertycoin-cpp-static PROPERTIES OUTPUT_NAME qwertycoin-cpp)
 
-  set(MONERO_CPP_LINK_LIBS
+  set(QWERTYCOIN_CPP_LINK_LIBS
       wallet
       rpc_base
       net
@@ -409,30 +409,30 @@ if (BUILD_LIBRARY)
       ${HIDAPI_LIBRARIES}
       ${EXTRA_LIBRARIES}
   )
-  target_link_libraries(monero-cpp ${MONERO_CPP_LINK_LIBS})
-  target_link_libraries(monero-cpp-static ${MONERO_CPP_LINK_LIBS})
+  target_link_libraries(qwertycoin-cpp ${QWERTYCOIN_CPP_LINK_LIBS})
+  target_link_libraries(qwertycoin-cpp-static ${QWERTYCOIN_CPP_LINK_LIBS})
 
 if (WIN32)
-    target_link_options(monero-cpp PUBLIC "-Wl,--enable-auto-import,--export-all-symbols")
+    target_link_options(qwertycoin-cpp PUBLIC "-Wl,--enable-auto-import,--export-all-symbols")
     if (STATIC)
       # statically link winpthread so the library does not depend on libwinpthread-1.dll
-      target_link_options(monero-cpp PRIVATE "-Wl,-Bstatic,--whole-archive" -lwinpthread "-Wl,--no-whole-archive,-Bdynamic")
+      target_link_options(qwertycoin-cpp PRIVATE "-Wl,-Bstatic,--whole-archive" -lwinpthread "-Wl,--no-whole-archive,-Bdynamic")
     endif()
 endif()
 
 if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
-    target_link_options(monero-cpp PRIVATE "-z" "noexecstack")
+    target_link_options(qwertycoin-cpp PRIVATE "-z" "noexecstack")
 endif()
 
 if (STATIC)
   if (NOT APPLE)
     # statically link the c++ runtime for a standalone library
-    target_link_options(monero-cpp PRIVATE -static-libstdc++ -static-libgcc)
-    # export only the monero-cpp api, not the static closure
-    target_link_options(monero-cpp PRIVATE "-Wl,--exclude-libs,ALL")
+    target_link_options(qwertycoin-cpp PRIVATE -static-libstdc++ -static-libgcc)
+    # export only the qwertycoin-cpp api, not the static closure
+    target_link_options(qwertycoin-cpp PRIVATE "-Wl,--exclude-libs,ALL")
   endif()
   if (CMAKE_SYSTEM_NAME STREQUAL "Linux")
-    target_link_options(monero-cpp PRIVATE "-Wl,--no-undefined") # fail at link if static closure is incomplete
+    target_link_options(qwertycoin-cpp PRIVATE "-Wl,--no-undefined") # fail at link if static closure is incomplete
   endif()
 endif()
 
@@ -454,7 +454,7 @@ endif()
           src/wallet/monero_wallet_model.h
           src/wallet/monero_wallet_rpc_model.h
           DESTINATION include/wallet)
-  INSTALL(TARGETS monero-cpp monero-cpp-static
+  INSTALL(TARGETS qwertycoin-cpp qwertycoin-cpp-static
           RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT Runtime
           LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT Runtime
           ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT Development)
@@ -472,16 +472,16 @@ if (BUILD_SAMPLE)
   target_include_directories(sample_code PUBLIC
       ${CMAKE_CURRENT_SOURCE_DIR}/include
       src
-      "${MONERO_PROJECT}/contrib/epee/include"
-      "${MONERO_PROJECT}/external/"
-      "${MONERO_PROJECT}/external/easylogging++"
-      "${MONERO_PROJECT}/external/rapidjson/include"
-      "${MONERO_PROJECT_SRC}/"
-      "${MONERO_PROJECT_SRC}/wallet"
-      "${MONERO_PROJECT_SRC}/wallet/api"
-      "${MONERO_PROJECT_SRC}/hardforks"
-      "${MONERO_PROJECT_SRC}/crypto"
-      "${MONERO_PROJECT_SRC}/crypto/crypto_ops_builder/include/"
+      "${QWERTYCOIN_CORE}/contrib/epee/include"
+      "${QWERTYCOIN_CORE}/external/"
+      "${QWERTYCOIN_CORE}/external/easylogging++"
+      "${QWERTYCOIN_CORE}/external/rapidjson/include"
+      "${QWERTYCOIN_CORE_SRC}/"
+      "${QWERTYCOIN_CORE_SRC}/wallet"
+      "${QWERTYCOIN_CORE_SRC}/wallet/api"
+      "${QWERTYCOIN_CORE_SRC}/hardforks"
+      "${QWERTYCOIN_CORE_SRC}/crypto"
+      "${QWERTYCOIN_CORE_SRC}/crypto/crypto_ops_builder/include/"
       ${Protobuf_INCLUDE_DIR}
       ${Boost_INCLUDE_DIR}
       ${OPENSSL_INCLUDE_DIR}
@@ -544,16 +544,16 @@ if (BUILD_SCRATCHPAD)
   target_include_directories(scratchpad PUBLIC
       ${CMAKE_CURRENT_SOURCE_DIR}/include
       src
-      "${MONERO_PROJECT}/contrib/epee/include"
-      "${MONERO_PROJECT}/external/"
-      "${MONERO_PROJECT}/external/easylogging++"
-      "${MONERO_PROJECT}/external/rapidjson/include"
-      "${MONERO_PROJECT_SRC}/"
-      "${MONERO_PROJECT_SRC}/wallet"
-      "${MONERO_PROJECT_SRC}/wallet/api"
-      "${MONERO_PROJECT_SRC}/hardforks"
-      "${MONERO_PROJECT_SRC}/crypto"
-      "${MONERO_PROJECT_SRC}/crypto/crypto_ops_builder/include/"
+      "${QWERTYCOIN_CORE}/contrib/epee/include"
+      "${QWERTYCOIN_CORE}/external/"
+      "${QWERTYCOIN_CORE}/external/easylogging++"
+      "${QWERTYCOIN_CORE}/external/rapidjson/include"
+      "${QWERTYCOIN_CORE_SRC}/"
+      "${QWERTYCOIN_CORE_SRC}/wallet"
+      "${QWERTYCOIN_CORE_SRC}/wallet/api"
+      "${QWERTYCOIN_CORE_SRC}/hardforks"
+      "${QWERTYCOIN_CORE_SRC}/crypto"
+      "${QWERTYCOIN_CORE_SRC}/crypto/crypto_ops_builder/include/"
       ${Protobuf_INCLUDE_DIR}
       ${Boost_INCLUDE_DIR}
       ${OPENSSL_INCLUDE_DIR}
@@ -609,23 +609,23 @@ endif()
 ########################
 
 if (BUILD_TESTS)
-  set(TEST_SRC_FILES test/monero_tests.cpp)
+  set(TEST_SRC_FILES test/qwertycoin_tests.cpp)
   
-  add_executable(monero_tests ${LIBRARY_SRC_FILES} ${TEST_SRC_FILES})
+  add_executable(qwertycoin_tests ${LIBRARY_SRC_FILES} ${TEST_SRC_FILES})
 
-  target_include_directories(monero_tests PUBLIC
+  target_include_directories(qwertycoin_tests PUBLIC
       ${CMAKE_CURRENT_SOURCE_DIR}/include
       src
-      "${MONERO_PROJECT}/contrib/epee/include"
-      "${MONERO_PROJECT}/external/"
-      "${MONERO_PROJECT}/external/easylogging++"
-      "${MONERO_PROJECT}/external/rapidjson/include"
-      "${MONERO_PROJECT_SRC}/"
-      "${MONERO_PROJECT_SRC}/wallet"
-      "${MONERO_PROJECT_SRC}/wallet/api"
-      "${MONERO_PROJECT_SRC}/hardforks"
-      "${MONERO_PROJECT_SRC}/crypto"
-      "${MONERO_PROJECT_SRC}/crypto/crypto_ops_builder/include/"
+      "${QWERTYCOIN_CORE}/contrib/epee/include"
+      "${QWERTYCOIN_CORE}/external/"
+      "${QWERTYCOIN_CORE}/external/easylogging++"
+      "${QWERTYCOIN_CORE}/external/rapidjson/include"
+      "${QWERTYCOIN_CORE_SRC}/"
+      "${QWERTYCOIN_CORE_SRC}/wallet"
+      "${QWERTYCOIN_CORE_SRC}/wallet/api"
+      "${QWERTYCOIN_CORE_SRC}/hardforks"
+      "${QWERTYCOIN_CORE_SRC}/crypto"
+      "${QWERTYCOIN_CORE_SRC}/crypto/crypto_ops_builder/include/"
       ${Protobuf_INCLUDE_DIR}
       ${Boost_INCLUDE_DIR}
       ${OPENSSL_INCLUDE_DIR}
@@ -635,7 +635,7 @@ if (BUILD_TESTS)
       ${UNBOUND_INCLUDE_DIR}
   )
   
-  target_link_libraries(monero_tests
+  target_link_libraries(qwertycoin_tests
       wallet
       rpc_base
       net
@@ -672,6 +672,6 @@ if (BUILD_TESTS)
       ${EXTRA_LIBRARIES}
   )
   if (NOT WIN32)
-    target_link_libraries(monero_tests dl)
+    target_link_libraries(qwertycoin_tests dl)
   endif()
 endif()

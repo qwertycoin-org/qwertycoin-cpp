@@ -56,7 +56,7 @@
 #include <string>
 
 /**
- * Public interface for libmonero-cpp library.
+ * Public interface for the qwertycoin-cpp library.
  */
 namespace monero {
 
