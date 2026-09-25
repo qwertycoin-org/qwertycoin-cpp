@@ -116,16 +116,16 @@ jobs:
           ./bootstrap.sh --with-libraries=chrono,date_time,filesystem,locale,program_options,regex,serialization,system,thread
           ./b2 -j3 cxxflags=-fPIC cflags=-fPIC link=static runtime-link=shared boost.locale.icu=off install
 
-      - name: Build monero-project
+      - name: Build Qwertycoin Core
         run: |
-          cd external/monero-project
+          cd external/qwertycoin-core
           mkdir -p build/release
           cd build/release
           cmake -DSTATIC=ON -DBUILD_64=ON -DARCH="${{ matrix.march }}" -DCMAKE_BUILD_TYPE=Release -DUSE_DEVICE_TREZOR=OFF ../../
           make -j3 wallet cryptonote_protocol
           cd ../../../../
 
-      - name: Build monero-cpp libraries
+      - name: Build qwertycoin-cpp libraries
         run: |
           mkdir -p build
           cd build
@@ -135,32 +135,32 @@ jobs:
 
       - name: Verify libraries
         run: |
-          file build/libmonero-cpp.so | grep -q '${{ matrix.filearch }}' || { echo "wrong architecture: $(file build/libmonero-cpp.so)"; exit 1; }
-          ldd build/libmonero-cpp.so
-          floor=$(objdump -T build/libmonero-cpp.so | grep -o 'GLIBC_[0-9.]*' | sort -uV | tail -1)
+          file build/libqwertycoin-cpp.so | grep -q '${{ matrix.filearch }}' || { echo "wrong architecture: $(file build/libqwertycoin-cpp.so)"; exit 1; }
+          ldd build/libqwertycoin-cpp.so
+          floor=$(objdump -T build/libqwertycoin-cpp.so | grep -o 'GLIBC_[0-9.]*' | sort -uV | tail -1)
           echo "glibc floor: $floor"
           test "$(printf '%s\n${{ matrix.glibc_floor }}\n' "$floor" | sort -V | tail -1)" = "${{ matrix.glibc_floor }}" || { echo "glibc floor $floor exceeds ${{ matrix.glibc_floor }}"; exit 1; }
-          if ldd build/libmonero-cpp.so | grep -vE 'linux-vdso|ld-linux|libc\.so|libm\.so|libpthread\.so|librt\.so|libdl\.so'; then
+          if ldd build/libqwertycoin-cpp.so | grep -vE 'linux-vdso|ld-linux|libc\.so|libm\.so|libpthread\.so|librt\.so|libdl\.so'; then
             echo "library is not standalone: unexpected dynamic dependencies above"; exit 1
           fi
-          nm -D --defined-only build/libmonero-cpp.so | grep -q monero_wallet_full || { echo "missing monero-cpp api exports"; exit 1; }
+          nm -D --defined-only build/libqwertycoin-cpp.so | grep -q monero_wallet_full || { echo "missing qwertycoin-cpp api exports"; exit 1; }
           # --exclude-libs hides the static closure; check for leaked dependency symbols
-          if nm -D --defined-only build/libmonero-cpp.so | grep -E ' (SSL_|EVP_|BN_)'; then
+          if nm -D --defined-only build/libqwertycoin-cpp.so | grep -E ' (SSL_|EVP_|BN_)'; then
             echo "static closure symbols are exported"; exit 1
           fi
-          nm build/libmonero-cpp.a | grep -q monero_wallet_full || { echo "missing api in static library"; exit 1; }
+          nm build/libqwertycoin-cpp.a | grep -q monero_wallet_full || { echo "missing api in static library"; exit 1; }
 
-      - name: Upload monero-cpp shared library
+      - name: Upload qwertycoin-cpp shared library
         uses: actions/upload-artifact@v7
         with:
-          name: libmonero-cpp-${{ matrix.arch }}
-          path: build/libmonero-cpp.so
+          name: libqwertycoin-cpp-${{ matrix.arch }}
+          path: build/libqwertycoin-cpp.so
 
-      - name: Upload monero-cpp static library
+      - name: Upload qwertycoin-cpp static library
         uses: actions/upload-artifact@v7
         with:
-          name: libmonero-cpp-${{ matrix.arch }}-static
-          path: build/libmonero-cpp.a
+          name: libqwertycoin-cpp-${{ matrix.arch }}-static
+          path: build/libqwertycoin-cpp.a
 
   windows:
     name: windows
@@ -215,10 +215,10 @@ jobs:
           # record versions of the msys2 libraries that get statically linked into the shipped binary
           pacman -Q | grep mingw-w64 | sort
 
-      - name: Build monero-project
+      - name: Build Qwertycoin Core
         shell: msys2 {0}
         run: |
-          cd external/monero-project
+          cd external/qwertycoin-core
           mkdir -p build/release
           cd build/release
           cmake -G "MSYS Makefiles" \
@@ -233,7 +233,7 @@ jobs:
             ../../
             make wallet cryptonote_protocol
 
-      - name: Build monero-cpp libraries
+      - name: Build qwertycoin-cpp libraries
         shell: msys2 {0}
         run: |
           mkdir -p build
@@ -245,35 +245,35 @@ jobs:
       - name: Verify libraries
         shell: msys2 {0}
         run: |
-          objdump -f build/libmonero-cpp.dll | grep -q "x86-64" || { echo "wrong architecture"; exit 1; }
-          ntldd build/libmonero-cpp.dll
-          if ntldd build/libmonero-cpp.dll | grep -iE "mingw|msys|not found"; then
+          objdump -f build/libqwertycoin-cpp.dll | grep -q "x86-64" || { echo "wrong architecture"; exit 1; }
+          ntldd build/libqwertycoin-cpp.dll
+          if ntldd build/libqwertycoin-cpp.dll | grep -iE "mingw|msys|not found"; then
             echo "library is not standalone: unexpected dynamic dependencies above"; exit 1
           fi
           # allow-list imports by name so a dependency resolving outside msys2 paths still fails
-          if ntldd build/libmonero-cpp.dll | grep -ivE "ntdll|kernel32|kernelbase|msvcrt|ws2_32|advapi32|user32|shell32|ole32|oleaut32|rpcrt4|crypt32|bcrypt|secur32|dnsapi|iphlpapi|setupapi|cfgmgr32|gdi32|winmm|userenv|version\.dll|api-ms-win" | grep -iE "\.dll"; then
+          if ntldd build/libqwertycoin-cpp.dll | grep -ivE "ntdll|kernel32|kernelbase|msvcrt|ws2_32|advapi32|user32|shell32|ole32|oleaut32|rpcrt4|crypt32|bcrypt|secur32|dnsapi|iphlpapi|setupapi|cfgmgr32|gdi32|winmm|userenv|version\.dll|api-ms-win" | grep -iE "\.dll"; then
             echo "library is not standalone: unexpected dynamic dependencies above"; exit 1
           fi
-          objdump -p build/libmonero-cpp.dll | grep -q monero_wallet_full || { echo "missing monero-cpp api exports"; exit 1; }
+          objdump -p build/libqwertycoin-cpp.dll | grep -q monero_wallet_full || { echo "missing qwertycoin-cpp api exports"; exit 1; }
           # --exclude-libs hides the static closure; check for leaked dependency symbols
-          if objdump -p build/libmonero-cpp.dll | grep -E '\s(SSL_|EVP_|BN_)'; then
+          if objdump -p build/libqwertycoin-cpp.dll | grep -E '\s(SSL_|EVP_|BN_)'; then
             echo "static closure symbols are exported"; exit 1
           fi
-          nm build/libmonero-cpp.a | grep -q monero_wallet_full || { echo "missing api in static library"; exit 1; }
+          nm build/libqwertycoin-cpp.a | grep -q monero_wallet_full || { echo "missing api in static library"; exit 1; }
 
-      - name: Upload monero-cpp shared library
+      - name: Upload qwertycoin-cpp shared library
         uses: actions/upload-artifact@v7
         with:
-          name: libmonero-cpp-windows-x86_64
+          name: libqwertycoin-cpp-windows-x86_64
           path: |
-            build/libmonero-cpp.dll
-            build/libmonero-cpp.dll.a
+            build/libqwertycoin-cpp.dll
+            build/libqwertycoin-cpp.dll.a
 
-      - name: Upload monero-cpp static library
+      - name: Upload qwertycoin-cpp static library
         uses: actions/upload-artifact@v7
         with:
-          name: libmonero-cpp-windows-x86_64-static
-          path: build/libmonero-cpp.a
+          name: libqwertycoin-cpp-windows-x86_64-static
+          path: build/libqwertycoin-cpp.a
 
   mac-os:
     name: ${{ matrix.arch }}
@@ -329,16 +329,16 @@ jobs:
           ./b2 -j3 cxxflags=-fPIC cflags=-fPIC link=static runtime-link=shared boost.locale.icu=off
           sudo -E ./b2 -j3 cxxflags=-fPIC cflags=-fPIC link=static runtime-link=shared boost.locale.icu=off install
 
-      - name: Build monero-project
+      - name: Build Qwertycoin Core
         run: |
-          cd external/monero-project
+          cd external/qwertycoin-core
           mkdir -p build/release
           cd build/release
           cmake -DSTATIC=ON -DBUILD_64=ON -DARCH="${{ matrix.march }}" -DCMAKE_BUILD_TYPE=Release -DUSE_DEVICE_TREZOR=OFF ../../
           make -j3 wallet cryptonote_protocol
           cd ../../../../
 
-      - name: Build monero-cpp libraries
+      - name: Build qwertycoin-cpp libraries
         run: |
           mkdir -p build
           cd build
@@ -348,27 +348,27 @@ jobs:
 
       - name: Verify libraries
         run: |
-          lipo -archs build/libmonero-cpp.dylib | grep -qx '${{ matrix.filearch }}' || { echo "wrong architecture: $(lipo -archs build/libmonero-cpp.dylib)"; exit 1; }
-          otool -L build/libmonero-cpp.dylib
-          otool -l build/libmonero-cpp.dylib | grep minos
-          otool -l build/libmonero-cpp.dylib | grep -q 'minos 11.0' || { echo "unexpected macOS deployment target"; exit 1; }
-          if otool -L build/libmonero-cpp.dylib | tail -n +2 | grep -vE '@rpath/libmonero-cpp\.dylib|/usr/lib/|/System/Library/'; then
+          lipo -archs build/libqwertycoin-cpp.dylib | grep -qx '${{ matrix.filearch }}' || { echo "wrong architecture: $(lipo -archs build/libqwertycoin-cpp.dylib)"; exit 1; }
+          otool -L build/libqwertycoin-cpp.dylib
+          otool -l build/libqwertycoin-cpp.dylib | grep minos
+          otool -l build/libqwertycoin-cpp.dylib | grep -q 'minos 11.0' || { echo "unexpected macOS deployment target"; exit 1; }
+          if otool -L build/libqwertycoin-cpp.dylib | tail -n +2 | grep -vE '@rpath/libqwertycoin-cpp\.dylib|/usr/lib/|/System/Library/'; then
             echo "library is not standalone: unexpected dynamic dependencies above"; exit 1
           fi
-          nm -gU build/libmonero-cpp.dylib | grep -q monero_wallet_full || { echo "missing monero-cpp api exports"; exit 1; }
-          nm build/libmonero-cpp.a | grep -q monero_wallet_full || { echo "missing api in static library"; exit 1; }
+          nm -gU build/libqwertycoin-cpp.dylib | grep -q monero_wallet_full || { echo "missing qwertycoin-cpp api exports"; exit 1; }
+          nm build/libqwertycoin-cpp.a | grep -q monero_wallet_full || { echo "missing api in static library"; exit 1; }
 
-      - name: Upload monero-cpp shared library
+      - name: Upload qwertycoin-cpp shared library
         uses: actions/upload-artifact@v7
         with:
-          name: libmonero-cpp-${{ matrix.arch }}
-          path: build/libmonero-cpp.dylib
+          name: libqwertycoin-cpp-${{ matrix.arch }}
+          path: build/libqwertycoin-cpp.dylib
 
-      - name: Upload monero-cpp static library
+      - name: Upload qwertycoin-cpp static library
         uses: actions/upload-artifact@v7
         with:
-          name: libmonero-cpp-${{ matrix.arch }}-static
-          path: build/libmonero-cpp.a
+          name: libqwertycoin-cpp-${{ matrix.arch }}-static
+          path: build/libqwertycoin-cpp.a
 
   release:
     name: release
@@ -382,16 +382,16 @@ jobs:
       - name: Download artifacts
         uses: actions/download-artifact@v7
         with:
-          pattern: libmonero-cpp-*
+          pattern: libqwertycoin-cpp-*
           path: artifacts
 
       - name: Package platform archives
         run: |
           mkdir release
           for arch in linux-x86_64 linux-arm64 mac-arm64 mac-x86_64 windows-x86_64; do
-            staging="monero-cpp-$GITHUB_REF_NAME-$arch"
+            staging="qwertycoin-cpp-$GITHUB_REF_NAME-$arch"
             mkdir "$staging"
-            cp "artifacts/libmonero-cpp-$arch"/* "artifacts/libmonero-cpp-$arch-static"/* "$staging"/
+            cp "artifacts/libqwertycoin-cpp-$arch"/* "artifacts/libqwertycoin-cpp-$arch-static"/* "$staging"/
             if [ "$arch" = windows-x86_64 ]; then zip -qr "release/$staging.zip" "$staging"; else tar czf "release/$staging.tar.gz" "$staging"; fi
           done
           ls -l release
@@ -399,7 +399,7 @@ jobs:
       - name: Attach archives to release
         uses: softprops/action-gh-release@v2
         with:
-          name: monero-cpp-${{ github.ref_name }}
+          name: qwertycoin-cpp-${{ github.ref_name }}
           files: release/*
           generate_release_notes: true
           draft: true # publish this draft after reviewing the notes; a separate release would have no assets

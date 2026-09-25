@@ -412,6 +412,9 @@ namespace monero {
     std::vector<std::shared_ptr<monero_destination>> m_destinations;
     std::vector<uint32_t> m_subtract_fee_from;
     boost::optional<std::string> m_payment_id;
+    // Canonically serialized tx_extra bytes supplied by trusted wallet clients.
+    // This bypasses payment-id construction but not wallet/core size validation.
+    boost::optional<std::string> m_extra_hex;
     boost::optional<monero_tx_priority> m_priority;
     boost::optional<uint32_t> m_ring_size;
     boost::optional<uint64_t> m_fee;

@@ -7,7 +7,7 @@ Upstream:
 - https://github.com/woodser/monero-cpp
 
 Core submodule:
-- external/monero-project points to the Qwertycoin v2 core repository.
+- external/qwertycoin-core points to the Qwertycoin v2 core repository.
 
 Licensing:
 - The original monero-cpp project is MIT licensed.

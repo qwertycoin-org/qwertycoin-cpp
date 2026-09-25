@@ -64,7 +64,7 @@
 #include "daemon/monero_daemon_model.h"
 
 /**
- * Public interface for libmonero-cpp library.
+ * Public interface for the qwertycoin-cpp library.
  */
 namespace monero {
 
