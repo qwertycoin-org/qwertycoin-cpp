@@ -1,6 +1,8 @@
-# Monero C++ Library
+# Qwertycoin C++ Library
 
-A C++ library for creating Monero applications using RPC or native bindings to [monero v0.18.5.1 'Fluorine Fermi'](https://github.com/monero-project/monero/tree/v0.18.5.1).
+A C++ bridge for Qwertycoin wallet, daemon, and QMS2 functionality. Native
+wallet bindings are built from the pinned Qwertycoin Core submodule at
+`external/qwertycoin-core`.
 
 * Supports fully client-side wallets by wrapping [wallet2.h](https://github.com/monero-project/monero/blob/master/src/wallet/wallet2.h).
 * Supports wallet and daemon RPC clients.
@@ -8,13 +10,19 @@ A C++ library for creating Monero applications using RPC or native bindings to [
 * Uses a clearly defined [data model and API specification](https://woodser.github.io/monero-java/monero-spec.pdf) intended to be intuitive and robust.
 * Query wallet transactions, transfers, and outputs by their properties.
 * Receive notifications when wallets sync, send, or receive.
-* Tested by over 100 tests in [monero-java](https://github.com/woodser/monero-java) and [monero-ts](https://github.com/woodser/monero-ts) using JNI and WebAssembly bindings.
+* Provides the native bridge consumed by `qwertycoin-ts` and its WebAssembly build.
+
+The public C++ model still contains inherited `monero_*` compatibility
+identifiers. Renaming that external API is a separate breaking change; active
+Qwertycoin build targets, artifacts, scripts, and submodule paths no longer use
+the former project branding. Original copyright, license, and provenance notices
+remain in `NOTICE` and the relevant source files.
 
 ## Architecture
 
 <p align="center">
 	<img width="85%" height="auto" src="docs/architecture.png"/><br>
-	<i>Build C++ applications using RPC or native bindings to <a href="https://github.com/monero-project/monero">monero-project/monero</a>.  Wallet implementations are interchangeable by conforming to a common interface, <a href="https://woodser.github.io/monero-cpp/doxygen/classmonero_1_1monero__wallet.html">monero_wallet.h</a>.</i>
+	<i>Build Qwertycoin applications using RPC or native bindings to Qwertycoin Core. Wallet implementations conform to the bridge's common compatibility interface.</i>
 </p>
 
 ## Sample code
@@ -26,7 +34,7 @@ uint64_t height = daemon->get_height();                            // 1523651
 vector<shared_ptr<monero_tx>> txs_in_pool = daemon->get_tx_pool(); // get transactions in the pool
 for (const shared_ptr<monero_tx>& tx : txs_in_pool) monero_utils::free(tx);
 
-// create wallet from mnemonic phrase using native bindings to monero-project
+// create a Qwertycoin wallet from a mnemonic phrase using native bindings
 monero_wallet_config wallet_config;
 wallet_config.m_path = "sample_wallet_full";
 wallet_config.m_password = "supersecretpassword123";
@@ -71,7 +79,7 @@ monero_utils::free(txs);
 monero_tx_config tx_config;
 tx_config.m_account_index = 0;
 tx_config.m_address = wallet_full->get_address(1, 0);
-tx_config.m_amount = 250000000000; // send 0.25 XMR (denominated in atomic units)
+tx_config.m_amount = 25000000; // send 0.25 QWC (denominated in atomic units)
 tx_config.m_relay = false; // create transaction and relay to the network if true
 shared_ptr<monero_tx_wallet> created_tx = wallet_rpc->create_tx(tx_config);
 uint64_t fee = created_tx->m_fee.get(); // "Are you sure you want to send... ?"
@@ -91,19 +99,20 @@ delete daemon;
 
 ## Documentation
 
-* [API documentation](https://woodser.github.io/monero-cpp/doxygen/annotated.html)
-* [API and model overview with visual diagrams](https://woodser.github.io/monero-java/monero-spec.pdf)
-* [monero-ts documentation](https://github.com/woodser/monero-ts#documentation) provides additional documentation which translates to monero-cpp
+* [API documentation](https://woodser.github.io/qwertycoin-cpp/doxygen/annotated.html)
+* The generated API documentation under `docs/doxygen` describes the inherited compatibility API.
+* [qwertycoin-ts](https://github.com/qwertycoin-org/qwertycoin-ts) provides the WebAssembly consumer.
 
-## Using monero-cpp in your project
+## Using qwertycoin-cpp in your project
 
 This project may be compiled as part of another application or built as a shared or static library.
 
-For example, [monero-java](https://github.com/woodser/monero-java) compiles this project to a shared library to support Java JNI bindings, while [monero-ts](https://github.com/woodser/monero-ts) compiles this project to WebAssembly binaries.
+The native library can be linked directly; `qwertycoin-ts` compiles the same
+sources to WebAssembly.
 
 ### Linux
 
-1. Clone the project repository if applicable: `git clone --recurse-submodules https://github.com/woodser/monero-cpp.git`
+1. Clone the project repository if applicable: `git clone --recurse-submodules https://github.com/qwertycoin-org/qwertycoin-cpp.git`
 2. Update dependencies: `sudo apt update && sudo apt install build-essential cmake pkg-config libssl-dev libzmq3-dev libunbound-dev libsodium-dev libunwind8-dev liblzma-dev libreadline6-dev libexpat1-dev libpgm-dev qttools5-dev-tools libhidapi-dev libusb-1.0-0-dev libprotobuf-dev protobuf-compiler libudev-dev libboost-chrono-dev libboost-date-time-dev libboost-filesystem-dev libboost-locale-dev libboost-program-options-dev libboost-regex-dev libboost-serialization-dev libboost-system-dev libboost-thread-dev python3 ccache doxygen graphviz nettle-dev libevent-dev`
 3. Follow instructions to install [unbound](https://unbound.docs.nlnetlabs.nl/en/latest/getting-started/installation.html) for Linux to your home directory (e.g. `~/unbound-1.22.0`).
 
@@ -137,12 +146,12 @@ For example, [monero-java](https://github.com/woodser/monero-java) compiles this
     sudo make install
     cd ../
     ```
-4. Build monero-project, located as a submodule at ./external/monero-project. Install [dependencies](https://github.com/monero-project/monero#dependencies) as needed for your system, then build with: `make release-static -j8`
-5. Link to this library's source files in your application, or build monero-cpp to a shared library in ./build: `./bin/build_libmonero_cpp.sh`
+4. Build Qwertycoin Core, located at `./external/qwertycoin-core`, with: `make release-static -j8`
+5. Link to this library's source files in your application, or build qwertycoin-cpp to a shared library in ./build: `./bin/build_qwertycoin_cpp.sh`
 
 ### macOS
 
-1. Clone the project repository if applicable: `git clone --recurse-submodules https://github.com/woodser/monero-cpp.git`
+1. Clone the project repository if applicable: `git clone --recurse-submodules https://github.com/qwertycoin-org/qwertycoin-cpp.git`
 2. Follow instructions to install [unbound](https://unbound.docs.nlnetlabs.nl/en/latest/getting-started/installation.html) for macOS to your home directory (e.g. `~/unbound-1.22.0`).
 
     For example:
@@ -155,8 +164,8 @@ For example, [monero-java](https://github.com/woodser/monero-java) compiles this
     make
     sudo make install
     ```
-3. Build monero-project, located as a submodule at ./external/monero-project. Install [dependencies](https://github.com/monero-project/monero#dependencies) as needed for your system, then build with e.g.: `make release-static -j6`
-4. Link to this library's source files in your application, or build monero-cpp to a shared library in ./build: `./bin/build_libmonero_cpp.sh`
+3. Build Qwertycoin Core, located at `./external/qwertycoin-core`, with e.g. `make release-static -j6`
+4. Link to this library's source files in your application, or build qwertycoin-cpp to a shared library in ./build: `./bin/build_qwertycoin_cpp.sh`
 
 ### Windows
 
@@ -182,29 +191,29 @@ For example, [monero-java](https://github.com/woodser/monero-java) compiles this
      ```
      pacman -S  mingw-w64-i686-toolchain make mingw-w64-i686-cmake mingw-w64-i686-boost mingw-w64-i686-openssl mingw-w64-i686-zeromq mingw-w64-i686-libsodium mingw-w64-i686-hidapi mingw-w64-i686-unbound mingw-w64-i686-protobuf git mingw-w64-i686-libusb gettext base-devel mingw-w64-i686-icu
      ```
-5. Clone repo if installing standalone (skip if building as part of another repo like monero-java or monero-ts): `git clone --recurse-submodules https://github.com/woodser/monero-cpp.git`
-6. In ./external/monero-project/Makefile, add `-D USE_DEVICE_TREZOR=OFF` to the `release-static-win64` target (or `release-static-win32` for 32-bit).
-7. Build monero-project, located as a submodule at ./external/monero-project. Install [dependencies](https://github.com/monero-project/monero#dependencies) as needed for your system, then build with:
+5. Clone the repository: `git clone --recurse-submodules https://github.com/qwertycoin-org/qwertycoin-cpp.git`
+6. In ./external/qwertycoin-core/Makefile, add `-D USE_DEVICE_TREZOR=OFF` to the `release-static-win64` target (or `release-static-win32` for 32-bit).
+7. Build Qwertycoin Core, located at `./external/qwertycoin-core`:
 
     For 64-bit: `make release-static-win64`
     
     For 32-bit: `make release-static-win32`
-8. Link to this library's source files in your application, or build monero-cpp to a shared library (libmonero-cpp.dll) in ./build: `./bin/build_libmonero_cpp.sh`
+8. Link to this library's source files in your application, or build qwertycoin-cpp to a shared library (libqwertycoin-cpp.dll) in ./build: `./bin/build_qwertycoin_cpp.sh`
 
 ## Running sample code and tests
 
-1. Download and install [Monero CLI](https://web.getmonero.org/downloads/).
-2. Start monerod, e.g.: `./monerod --stagenet` (or use a remote daemon).
-3. Start monero-wallet-rpc, e.g.: `./monero-wallet-rpc --daemon-address http://localhost:38081 --stagenet --rpc-bind-port 38083 --rpc-login rpc_user:abc123 --wallet-dir ./`
-4. Build with the sample code, scratchpad, and tests enabled: `./bin/build_libmonero_cpp.sh -D BUILD_SAMPLE=ON -D BUILD_SCRATCHPAD=ON -D BUILD_TESTS=ON`
+1. Build the matching Qwertycoin CLI from the pinned Core submodule.
+2. Start `qwertycoind` on the intended test network.
+3. Start `qwertycoin-wallet-rpc` against that daemon.
+4. Build with the sample code, scratchpad, and tests enabled: `./bin/build_qwertycoin_cpp.sh -D BUILD_SAMPLE=ON -D BUILD_SCRATCHPAD=ON -D BUILD_TESTS=ON`
 
     Flags are cached in ./build/CMakeCache.txt, so pass them on every build to change them. Editing the defaults in CMakeLists.txt has no effect once ./build exists.
 5. Run the app, for example: `./build/sample_code`
 
 ## Related projects
 
-* [monero-java](https://github.com/woodser/monero-java)
-* [monero-ts](https://github.com/woodser/monero-ts)
+* [Qwertycoin Core](https://github.com/qwertycoin-org/qwertycoin)
+* [qwertycoin-ts](https://github.com/qwertycoin-org/qwertycoin-ts)
 
 ## License
 

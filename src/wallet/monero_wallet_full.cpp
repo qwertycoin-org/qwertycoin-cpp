@@ -2062,6 +2062,23 @@ namespace monero {
     if (!validate_transfer(m_w2.get(), tr_destinations, payment_id, dsts, extra, true, err)) {
       throw std::runtime_error(err.message);
     }
+    if (config.m_extra_hex != boost::none) {
+      if (!payment_id.empty()) throw std::runtime_error("Cannot combine custom tx extra with a payment ID");
+      std::string extra_blob;
+      if (!epee::string_tools::parse_hexstr_to_binbuff(config.m_extra_hex.get(), extra_blob)) {
+        throw std::runtime_error("Invalid custom tx extra hex");
+      }
+      extra.assign(extra_blob.begin(), extra_blob.end());
+      if (extra.size() > MAX_TX_EXTRA_SIZE) throw std::runtime_error("Custom tx extra exceeds the relay limit");
+      std::vector<cryptonote::tx_extra_field> extra_fields;
+      if (!cryptonote::parse_tx_extra(extra, extra_fields)) {
+        throw std::runtime_error("Custom tx extra is not structurally valid");
+      }
+      std::vector<uint8_t> canonical_extra;
+      if (!cryptonote::sort_tx_extra(extra, canonical_extra) || canonical_extra != extra) {
+        throw std::runtime_error("Custom tx extra is not canonically ordered");
+      }
+    }
 
     // prepare parameters for wallet2's create_transactions_2()
     uint64_t mixin = m_w2->adjust_mixin(0); // get mixin for call to 'create_transactions_2'
@@ -2165,6 +2182,8 @@ namespace monero {
       tx->m_in_tx_pool = tx->m_relay.get();
       if (!tx->m_is_failed.get() && tx->m_is_relayed.get()) tx->m_is_double_spend_seen = false;  // TODO: test and handle if true
       tx->m_num_confirmations = 0;
+      tx->m_extra_hex = epee::string_tools::buff_to_hex_nodelimer(
+          std::string(reinterpret_cast<const char*>(ptx_iter->tx.extra.data()), ptx_iter->tx.extra.size()));
       tx->m_ring_size = monero_utils::RING_SIZE;
       tx->m_unlock_time = 0;
       tx->m_is_locked = true;

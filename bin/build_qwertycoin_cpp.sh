@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# build monero-project dependencies
-cd ./external/monero-project/ || exit 1
+# build Qwertycoin Core dependencies
+cd ./external/qwertycoin-core/ || exit 1
 git submodule update --init --force || exit 1
 HOST_NCORES=$(nproc 2>/dev/null || shell nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 1)
 if [[ $(uname -s) == "MINGW64_NT"* || $(uname -s) == "MSYS"* ]]; then
@@ -50,7 +50,7 @@ else
 fi
 cd ../../
 
-# build libmonero-cpp shared library; extra args go to cmake, e.g. -D BUILD_SAMPLE=ON
+# build libqwertycoin-cpp shared library; extra args go to cmake, e.g. -D BUILD_SAMPLE=ON
 mkdir -p build &&
 cd build &&
 cmake "$@" .. &&
