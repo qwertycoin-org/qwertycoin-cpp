@@ -18,6 +18,10 @@ Qwertycoin build targets, artifacts, scripts, and submodule paths no longer use
 the former project branding. Original copyright, license, and provenance notices
 remain in `NOTICE` and the relevant source files.
 
+The committed Core gitlink is the compatibility boundary. The reviewed
+Core, GUI, C++ bridge, and TypeScript/WASM pins are recorded in the
+[canonical compatibility matrix](https://github.com/qwertycoin-org/qwertycoin/blob/main/docs/releases/COMPATIBILITY.md).
+
 ## Architecture
 
 <p align="center">

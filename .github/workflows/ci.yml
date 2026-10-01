@@ -1,0 +1,74 @@
+name: Required CI
+
+on:
+  pull_request:
+    branches: [master]
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cpp-required-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  linux:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    env:
+      DEBIAN_FRONTEND: noninteractive
+    steps:
+      - name: Checkout immutable revision and pinned Core
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+          submodules: recursive
+      - name: Install Linux build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential cmake pkg-config git \
+            libboost-all-dev libssl-dev libzmq3-dev libpgm-dev libunbound-dev \
+            libsodium-dev libhidapi-dev libusb-1.0-0-dev libunwind-dev \
+            liblzma-dev libreadline-dev libexpat1-dev libprotobuf-dev \
+            protobuf-compiler libudev-dev
+      - name: Build pinned Qwertycoin Core libraries
+        run: |
+          cmake -S external/qwertycoin-core \
+            -B external/qwertycoin-core/build/release \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DBUILD_TESTS=OFF \
+            -DBUILD_GUI_DEPS=ON \
+            -DUSE_DEVICE_TREZOR=OFF \
+            -DMANUAL_SUBMODULES=1
+          cmake --build external/qwertycoin-core/build/release \
+            --target wallet cryptonote_protocol \
+            --parallel 2
+      - name: Build bridge, sample, scratchpad, and tests
+        run: |
+          cmake -S . -B build \
+            -DSTATIC=OFF \
+            -DBUILD_SAMPLE=ON \
+            -DBUILD_SCRATCHPAD=ON \
+            -DBUILD_TESTS=ON
+          cmake --build build --parallel 2
+      - name: Run bridge tests
+        run: build/qwertycoin_tests
+      - name: Verify bridge exports and immutable Core pin
+        run: |
+          test "$(git rev-parse HEAD:external/qwertycoin-core)" = "$(git -C external/qwertycoin-core rev-parse HEAD)"
+          nm -D --defined-only build/libqwertycoin-cpp.so | grep -q monero_wallet_full
+          git diff --check
+
+  required:
+    name: required
+    if: always()
+    needs: [linux]
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Require every gate
+        env:
+          LINUX_RESULT: ${{ needs.linux.result }}
+        run: test "$LINUX_RESULT" = success
