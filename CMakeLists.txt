@@ -257,6 +257,14 @@ add_library(cryptonote_core STATIC IMPORTED)
 set_target_properties(cryptonote_core PROPERTIES IMPORTED_LOCATION
     ${QWERTYCOIN_CORE_BUILD}/src/cryptonote_core/libcryptonote_core.a)
 
+add_library(epose STATIC IMPORTED)
+set_target_properties(epose PROPERTIES IMPORTED_LOCATION
+    ${QWERTYCOIN_CORE_BUILD}/src/epose/libepose.a)
+
+add_library(qms STATIC IMPORTED)
+set_target_properties(qms PROPERTIES IMPORTED_LOCATION
+    ${QWERTYCOIN_CORE_BUILD}/src/qms/libqms.a)
+
 add_library(cryptonote_protocol STATIC IMPORTED)
 set_target_properties(cryptonote_protocol PROPERTIES IMPORTED_LOCATION
     ${QWERTYCOIN_CORE_BUILD}/src/cryptonote_protocol/libcryptonote_protocol.a)
@@ -380,6 +388,8 @@ if (BUILD_LIBRARY)
       unbound
       easylogging
       cryptonote_core
+      epose
+      qms
       cryptonote_protocol
       cryptonote_basic
       cryptonote_format_utils_basic
@@ -498,6 +508,8 @@ if (BUILD_SAMPLE)
       lmdb
       easylogging
       cryptonote_core
+      epose
+      qms
       cryptonote_protocol
       cryptonote_basic
       cryptonote_format_utils_basic
@@ -570,6 +582,8 @@ if (BUILD_SCRATCHPAD)
       lmdb
       easylogging
       cryptonote_core
+      epose
+      qms
       cryptonote_protocol
       cryptonote_basic
       cryptonote_format_utils_basic
@@ -642,6 +656,8 @@ if (BUILD_TESTS)
       lmdb
       easylogging
       cryptonote_core
+      epose
+      qms
       cryptonote_protocol
       cryptonote_basic
       cryptonote_format_utils_basic

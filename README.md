@@ -18,6 +18,10 @@ Qwertycoin build targets, artifacts, scripts, and submodule paths no longer use
 the former project branding. Original copyright, license, and provenance notices
 remain in `NOTICE` and the relevant source files.
 
+The committed Core gitlink is the compatibility boundary. The reviewed
+Core, GUI, C++ bridge, and TypeScript/WASM pins are recorded in the
+[canonical compatibility matrix](https://github.com/qwertycoin-org/qwertycoin/blob/main/docs/releases/COMPATIBILITY.md).
+
 ## Architecture
 
 <p align="center">
@@ -202,13 +206,11 @@ sources to WebAssembly.
 
 ## Running sample code and tests
 
-1. Build the matching Qwertycoin CLI from the pinned Core submodule.
-2. Start `qwertycoind` on the intended test network.
-3. Start `qwertycoin-wallet-rpc` against that daemon.
-4. Build with the sample code, scratchpad, and tests enabled: `./bin/build_qwertycoin_cpp.sh -D BUILD_SAMPLE=ON -D BUILD_SCRATCHPAD=ON -D BUILD_TESTS=ON`
+1. Build with the sample code, scratchpad, and tests enabled: `./bin/build_qwertycoin_cpp.sh -D BUILD_SAMPLE=ON -D BUILD_SCRATCHPAD=ON -D BUILD_TESTS=ON`
 
     Flags are cached in ./build/CMakeCache.txt, so pass them on every build to change them. Editing the defaults in CMakeLists.txt has no effect once ./build exists.
-5. Run the app, for example: `./build/sample_code`
+2. Run the hermetic bridge contracts with `./build/qwertycoin_tests`. This default test path requires no daemon, wallet, key file, or network access.
+3. The sample, scratchpad, and legacy integration stress path require explicitly configured disposable test-network services and fixtures. Never use a production wallet. To opt into the stress path, provide the local test-wallet path and password through the process environment and run `./build/qwertycoin_tests --integration`.
 
 ## Related projects
 
