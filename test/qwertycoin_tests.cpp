@@ -402,7 +402,9 @@ void run_offline_contract_tests() {
   require_contract(uuid_a.size() == 36, "UUID must use the canonical 36-character representation");
   require_contract(uuid_a != uuid_b, "independent UUID generations must differ");
 
-  monero_destination destination("QWC-test-destination", 4200000000ULL);
+  monero_destination destination;
+  destination.m_address = string("QWC-test-destination");
+  destination.m_amount = uint64_t(4200000000ULL);
   const string destination_json = destination.serialize();
   const shared_ptr<monero_destination> decoded_destination = monero_destination::deserialize(destination_json);
   require_contract(decoded_destination->m_address == destination.m_address, "destination address did not round-trip");
