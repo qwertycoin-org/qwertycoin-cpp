@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <cstdlib>
 #include <iostream>
 #include "wallet2.h"
 #include "wallet/monero_wallet_full.h"
@@ -391,6 +392,33 @@ void test_multisig_stress(monero_wallet* funding_wallet, string wallet_name = ""
 
 // ----------------------------------- MAIN -----------------------------------
 
+void require_contract(bool condition, const string& message) {
+  if (!condition) throw runtime_error(message);
+}
+
+void run_offline_contract_tests() {
+  const string uuid_a = gen_utils::get_uuid();
+  const string uuid_b = gen_utils::get_uuid();
+  require_contract(uuid_a.size() == 36, "UUID must use the canonical 36-character representation");
+  require_contract(uuid_a != uuid_b, "independent UUID generations must differ");
+
+  monero_destination destination("QWC-test-destination", 4200000000ULL);
+  const string destination_json = destination.serialize();
+  const shared_ptr<monero_destination> decoded_destination = monero_destination::deserialize(destination_json);
+  require_contract(decoded_destination->m_address == destination.m_address, "destination address did not round-trip");
+  require_contract(decoded_destination->m_amount == destination.m_amount, "destination amount did not round-trip");
+
+  monero_sync_result sync_result(42, true);
+  const shared_ptr<monero_sync_result> decoded_sync = monero_sync_result::deserialize(sync_result.serialize());
+  require_contract(decoded_sync->m_num_blocks_fetched == 42, "sync height did not round-trip");
+  require_contract(decoded_sync->m_received_money, "sync received-money flag did not round-trip");
+
+  require_contract(monero_utils::is_valid_payment_id("0123456789abcdef"), "valid short payment ID rejected");
+  require_contract(!monero_utils::is_valid_payment_id("not-a-payment-id"), "invalid payment ID accepted");
+
+  cout << "Offline bridge contract tests passed" << endl;
+}
+
 /**
  * Main entry point for tests.
  */
@@ -409,13 +437,22 @@ int main(int argc, const char* argv[]) {
     MINFO("Argument" << i << ": " << argv[i]);
   }
 
-  string path = "test_wallet_1";
-  string password = "supersecretpassword123";
-  string language = "English";
-  int network_type = 2;
+  bool run_integration = false;
+  for (int i = 1; i < argc; i++) {
+    if (string(argv[i]) == "--integration") run_integration = true;
+  }
+
+  run_offline_contract_tests();
+  if (!run_integration) return 0;
+
+  const char* wallet_path = getenv("QWC_CPP_TEST_WALLET_PATH");
+  const char* wallet_password = getenv("QWC_CPP_TEST_WALLET_PASSWORD");
+  if (wallet_path == nullptr || wallet_password == nullptr) {
+    throw runtime_error("integration tests require QWC_CPP_TEST_WALLET_PATH and QWC_CPP_TEST_WALLET_PASSWORD");
+  }
 
   // load test wallet
-  monero_wallet* wallet = monero_wallet_full::open_wallet("../../test_wallets/test_wallet_1", "supersecretpassword123", monero_network_type::TESTNET);
+  monero_wallet* wallet = monero_wallet_full::open_wallet(wallet_path, wallet_password, monero_network_type::TESTNET);
   wallet->set_daemon_connection(DAEMON_URI);
   wallet->sync();
   wallet->start_syncing(5000);
